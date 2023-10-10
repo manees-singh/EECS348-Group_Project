@@ -1,0 +1,18 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "label": "Caclulator Program",
+    "type": "shell",
+    "command": "C:\\msys64\\ucrt64\\bin\\g++",
+    "args": [
+        "-g",
+        "calc.cpp",
+        "-o",
+        "calc"
+    ],
+    "group": {
+        "kind": "build",
+        "isDefault": true
+    }
+}
