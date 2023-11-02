@@ -1,0 +1,8 @@
+WHEN: Thurday,November 2 at 5:45 pm
+PURPOSE: Continue working on Software Architecture doc (introduction) and creating skeleton for the calculator 
+ATTENDANCE: Achinth U, William Johnson, Manish singh
+NOTE : for now we dont have any class based architecture yet since we dont have a sepcific architecure  it just simple function calls for now
+Will  created a simple CLI based calculator using stacks to follow PEMDAS and compute the expression
+we thought that it would be easier to develop the architecture around a working demo ofthe calculator, for now we have a functionl CLI based calculator.
+need to focus of edges cases at the next meet
+we started working on the Software architecture document (started the intro) but we cant proceed further without a solid plan on what we want the final end product to be 
