@@ -17,7 +17,7 @@ int main(int argc, char *argv[]){
 
     bool quit = false;
     printf("===================================================================================\n");
-    printf("                              Epic Calculator Program                              \n");
+    printf("                       Kansas Instruments Calculator Program                       \n");
     printf("===================================================================================\n\n");
 
     while(!quit){
