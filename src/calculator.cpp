@@ -133,7 +133,6 @@ int Calculator::evaluate(const string s){
     string s_cleaned_temp;
 
     bool closeParenForNegativeCompensationAfterNextFullNumber = false;
-    int requiredClosingParens = 1; // ONLY changed for the case of negative inference on a paren set.
 
     for (int i = 0; i < s.size(); ++i){
         char c = s[i];
@@ -170,26 +169,27 @@ int Calculator::evaluate(const string s){
             }
             ops.push(c);
         } else if (c == ')'){
-            for (int k = 1; k <= requiredClosingParens; k++){
-                while ((!ops.empty()) && ops.top() != '('){
-                    int b = numbers.top();
-                    numbers.pop();
-                    int a = numbers.top();
-                    numbers.pop();
-                    char op = ops.top();
-                    ops.pop();
-                    numbers.push(performSimpleOperation(a, b, op));
+            while ((!ops.empty()) && ops.top() != '('){
+                if (numbers.size() < 2){
+                    throw runtime_error("Invalid Equation: One or more operators attempted to operate on nothing.");
                 }
-                if ((!ops.empty())){
-                    ops.pop();
-                }
+                int b = numbers.top();
+                numbers.pop();
+                int a = numbers.top();
+                numbers.pop();
+                char op = ops.top();
+                ops.pop();
+                numbers.push(performSimpleOperation(a, b, op));
             }
-            requiredClosingParens = 1;
+            if ((!ops.empty())){
+                ops.pop();
+            }
         } else {
-            if (c == '-' && !isdigit(s_cleaned_temp[i-1])){
+            if (c == '-' && !isdigit(s_cleaned_temp[i-1]) && (s_cleaned_temp[i-1] != ')')){
                // if (s_cleaned_temp[i-1]){
                     if (s_cleaned_temp[i+1] == '('){
-                        requiredClosingParens++;
+                        s_cleaned_temp.insert(i+1, 1, ')');
+                        eq_size = s_cleaned_temp.size();
                     } else if (!isdigit(s_cleaned_temp[i+1])){
                         throw runtime_error("Invalid Equation: Negative Inference on symbol");
                     } else {
@@ -202,6 +202,9 @@ int Calculator::evaluate(const string s){
                 continue;
             }
             while (!ops.empty() && precedence(ops.top()) >= precedence(c)){
+                if (numbers.size() < 2){
+                    throw runtime_error("Invalid Equation: One or more operators attempted to operate on nothing.");
+                }
                 if (c == '^' && ops.top() == '^') {
                     break;
                 }
