@@ -5,6 +5,7 @@
 #include <sstream>
 #include <cstring>
 #include <regex>
+#include <climits>
 
 #include "calculator.h"
 
@@ -22,7 +23,7 @@ Calculator::Calculator(bool _debug){
 Calculator::~Calculator(){}
 
 bool Calculator::isValidEquation(const string equation){
-    regex allowedRegex("[0-9\\+\\-\\*\\/\\^\\%\\(\\)]*");
+    regex allowedRegex("[0-9\\+\\-\\*\\/\\^\\%\\(\\) ]*");
     bool onlyAllowedCharacters = regex_match(equation, allowedRegex);
 
     bool matchingOpenAndClosedParens = false;
@@ -51,18 +52,58 @@ int Calculator::performSimpleOperation(int a, int b, char op){
     if (_DEBUG == true){
         printf("step: %d %c %d\n", a, op, b);
     }
-    if (op == '/'){
-        if (b == 0){
-            throw runtime_error("Attempted divide by 0");
-        }
-    }
     switch (op) {
-        case '+': return a + b;
-        case '-': return a - b;
-        case '*': return a * b;
-        case '/': return a / b;
+        case '+': 
+            if ((b > 0 && a > INT_MAX - b) || (b < 0 && a < INT_MIN - b)){
+                throw runtime_error("Integer overflow or underflow");
+            }
+            return a + b;
+        case '-':  
+            if ((b < 0 && a > INT_MAX + b) || (b > 0 && a < INT_MIN + b)){
+                throw runtime_error("Integer overflow or underflow");
+            }
+            return a - b;
+        case '*': 
+            if (a > 0){
+                if (b > 0) {
+                    if (a > (INT_MAX / b)) {
+                        throw runtime_error("Integer overflow or underflow");
+                    }
+                } else {
+                    if (b < (INT_MIN / a)) {
+                        throw runtime_error("Integer overflow or underflow");
+                    }
+                }
+               
+            } else {
+                if (b > 0) {
+                    if (a < (INT_MIN / b)){
+                        throw runtime_error("Integer overflow or underflow");
+                    }
+                } else {
+                    if ( (a != 0) && (b < (INT_MAX / a))) {
+                        throw runtime_error("Integer overflow or underflow");
+                    }
+                }
+            }
+            return a * b;
+        case '/':
+             if (b == 0){
+                throw runtime_error("Attempted divide by 0");
+            } else if (a == INT_MIN && b == -1) {
+                throw runtime_error("Integer overflow or underflow");
+            }
+            return a / b;
         case '^': return pow(a, b);
-        case '%': return a % b;
+        case '%': 
+            if (b == 0){
+                throw runtime_error("Attempt module by 0");
+            }
+            float result = a % b;
+            if ((result < 0 && b > 0) || (result > 0 && b < 0)){
+                result += b;
+            }
+            return result;
     }
 
     printf("Unknown operator: %c", op);
@@ -91,38 +132,75 @@ int Calculator::evaluate(const string s){
 
     string s_cleaned_temp;
 
+    bool closeParenForNegativeCompensationAfterNextFullNumber = false;
+    int requiredClosingParens = 1; // ONLY changed for the case of negative inference on a paren set.
+
     for (int i = 0; i < s.size(); ++i){
         char c = s[i];
-
         if (isspace(c)) continue;
-
         s_cleaned_temp += c;
+    }
 
+    int eq_size = s_cleaned_temp.size();
+
+    for (int i = 0; i < eq_size; ++i){
+        char c = s_cleaned_temp[i];
         if (isdigit(c)) {
             int num = 0;
-            while (isdigit(s[i])){
-                num = num * 10 + (s[i] - '0');
+            while (isdigit(s_cleaned_temp[i])){
+                int nextDigit = s_cleaned_temp[i] - '0';
+                if (num > (INT_MAX - nextDigit) / 10) {
+                    throw runtime_error("Number in equation results in overflow (Int32 limit)");
+                } else if (num < (INT_MIN + nextDigit) / 10){
+                    throw runtime_error("Number in equation results in underflow (Int32 limit)");
+                }
+                num = num * 10 + nextDigit;
                 i++;
             }
             i--;
             numbers.push(num);
+            if (closeParenForNegativeCompensationAfterNextFullNumber){
+                s_cleaned_temp.insert(i+1, 1, ')');
+                closeParenForNegativeCompensationAfterNextFullNumber = false;
+                eq_size = s_cleaned_temp.size();
+            }
         } else if (c == '('){
             if (i > 0 && isdigit(s_cleaned_temp[i - 1])){
                 ops.push('*');
             }
             ops.push(c);
         } else if (c == ')'){
-            while (ops.top() != '(' && (!ops.empty())){
-                int b = numbers.top();
-                numbers.pop();
-                int a = numbers.top();
-                numbers.pop();
-                char op = ops.top();
-                ops.pop();
-                numbers.push(performSimpleOperation(a, b, op));
+            for (int k = 1; k <= requiredClosingParens; k++){
+                while ((!ops.empty()) && ops.top() != '('){
+                    int b = numbers.top();
+                    numbers.pop();
+                    int a = numbers.top();
+                    numbers.pop();
+                    char op = ops.top();
+                    ops.pop();
+                    numbers.push(performSimpleOperation(a, b, op));
+                }
+                if ((!ops.empty())){
+                    ops.pop();
+                }
             }
-            ops.pop();
+            requiredClosingParens = 1;
         } else {
+            if (c == '-' && !isdigit(s_cleaned_temp[i-1])){
+               // if (s_cleaned_temp[i-1]){
+                    if (s_cleaned_temp[i+1] == '('){
+                        requiredClosingParens++;
+                    } else if (!isdigit(s_cleaned_temp[i+1])){
+                        throw runtime_error("Invalid Equation: Negative Inference on symbol");
+                    } else {
+                        closeParenForNegativeCompensationAfterNextFullNumber = true;
+                    }
+                    
+               // }
+                numbers.push(0);
+                ops.push('-');
+                continue;
+            }
             while (!ops.empty() && precedence(ops.top()) >= precedence(c)){
                 if (c == '^' && ops.top() == '^') {
                     break;
