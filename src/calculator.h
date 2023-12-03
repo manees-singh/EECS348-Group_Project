@@ -15,7 +15,7 @@ class Calculator {
             The function supports basic arithmetic operations including +, -, *, /, ^, and %,
             and handles parentheses for operation precedence.
         */
-        int evaluate(const string s);
+        float evaluate(const string s);
 
         /*
             isValidEquation
@@ -30,11 +30,11 @@ class Calculator {
     private:
         /*
         performSimpleOperation
-        Takes two integers and a char representing an operator,
+        Takes two floats and a char representing an operator,
         and performs a simple arithmetic operation based on the operator.
         Supported operations are +, -, *, /, ^, and %.
         */
-        int performSimpleOperation(int a, int b, char op);
+        float performSimpleOperation(float a, float b, char op);
 
         /*
             precedence
