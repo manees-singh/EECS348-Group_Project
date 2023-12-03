@@ -48,9 +48,9 @@ bool Calculator::isValidEquation(const string equation){
     Should take in a simple equation like "a + b", "a - b", "a * b", etc. and return the solution
 */
 
-int Calculator::performSimpleOperation(int a, int b, char op){
+float Calculator::performSimpleOperation(float a, float b, char op){
     if (_DEBUG == true){
-        printf("step: %d %c %d\n", a, op, b);
+        printf("step: %f %c %f\n", a, op, b);
     }
     switch (op) {
         case '+': 
@@ -99,7 +99,7 @@ int Calculator::performSimpleOperation(int a, int b, char op){
             if (b == 0){
                 throw runtime_error("Attempt module by 0");
             }
-            float result = a % b;
+            float result = fmod(a,b);
             if ((result < 0 && b > 0) || (result > 0 && b < 0)){
                 result += b;
             }
@@ -126,8 +126,8 @@ int Calculator::precedence(char op) {
     Main evaluation function. Dual stack based implementation of a calculator: one stack for numbers, one for operators.
 */
 
-int Calculator::evaluate(const string s){
-    stack<int> numbers;
+float Calculator::evaluate(const string s){
+    stack<float> numbers;
     stack<char> ops;
 
     string s_cleaned_temp;
@@ -145,9 +145,9 @@ int Calculator::evaluate(const string s){
     for (int i = 0; i < eq_size; ++i){
         char c = s_cleaned_temp[i];
         if (isdigit(c)) {
-            int num = 0;
+            float num = 0;
             while (isdigit(s_cleaned_temp[i])){
-                int nextDigit = s_cleaned_temp[i] - '0';
+                float nextDigit = s_cleaned_temp[i] - '0';
                 if (num > (INT_MAX - nextDigit) / 10) {
                     throw runtime_error("Number in equation results in overflow (Int32 limit)");
                 } else if (num < (INT_MIN + nextDigit) / 10){
@@ -173,9 +173,9 @@ int Calculator::evaluate(const string s){
                 if (numbers.size() < 2){
                     throw runtime_error("Invalid Equation: One or more operators attempted to operate on nothing.");
                 }
-                int b = numbers.top();
+                float b = numbers.top();
                 numbers.pop();
-                int a = numbers.top();
+                float a = numbers.top();
                 numbers.pop();
                 char op = ops.top();
                 ops.pop();
@@ -208,9 +208,9 @@ int Calculator::evaluate(const string s){
                 if (c == '^' && ops.top() == '^') {
                     break;
                 }
-                int b = numbers.top();
+                float b = numbers.top();
                 numbers.pop();
-                int a = numbers.top();
+                float a = numbers.top();
                 numbers.pop();
                 char op = ops.top();
                 ops.pop();
@@ -224,9 +224,9 @@ int Calculator::evaluate(const string s){
         if (numbers.size() < 2){
             throw runtime_error("Invalid Equation: One or more operators attempted to operate on nothing.");
         }
-        int b = numbers.top();
+        float b = numbers.top();
         numbers.pop();
-        int a = numbers.top();
+        float a = numbers.top();
         numbers.pop();
         numbers.push(performSimpleOperation(a, b, ops.top()));
         ops.pop();

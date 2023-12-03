@@ -40,8 +40,8 @@ int main(int argc, char *argv[]){
         }
 
         try {
-            int result = c.evaluate(BaseEquation);
-            printf("Result: %d\n\n", result);
+            float result = c.evaluate(BaseEquation);
+            printf("Result: %f\n\n", result);
         }
         catch (const exception& e){
             cerr << "Exception caught: " << e.what() << endl << endl;
